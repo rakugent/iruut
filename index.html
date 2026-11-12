@@ -54,8 +54,8 @@
   .progress-segment{height:4px;flex:1;border-radius:20px;background:rgba(255,255,255,.48);overflow:hidden}
   .progress-segment.done,.progress-segment.current{background:#fff}
   .story-count{position:absolute;z-index:3;top:30px;right:16px;color:white;font-size:12px;font-weight:700;text-shadow:0 1px 5px #0008}
-  .arrow-wrap{position:absolute;z-index:2;left:0;right:0;top:31%;height:35%;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .arrow{width:clamp(105px,25vw,180px);height:auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.25))}
+  .arrow-wrap{position:absolute;z-index:2;left:0;right:0;top:47%;height:65%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}
+  .arrow{width:clamp(150px,38vw,230px);height:100%;overflow:visible;filter:drop-shadow(0 3px 8px rgba(0,0,0,.16))}
   .caption-card{position:absolute;z-index:3;left:16px;right:16px;bottom:max(20px,env(safe-area-inset-bottom));background:rgba(255,253,248,.97);border-radius:22px;padding:19px 20px 21px;box-shadow:0 8px 30px rgba(0,0,0,.18);color:var(--blue)}
   .caption-title{font-size:clamp(23px,5vw,31px);font-weight:800;line-height:1.1;margin:0 0 7px;letter-spacing:-.5px}
   .caption-description{font-size:clamp(14px,3.5vw,17px);line-height:1.4;margin:0;color:#18366f;white-space:pre-wrap}
@@ -97,8 +97,17 @@
   <div class="progress" id="progress"></div>
   <div class="story-count" id="storyCount">1 of 3</div>
   <div class="arrow-wrap" aria-hidden="true">
-    <svg class="arrow" viewBox="0 0 180 230" xmlns="http://www.w3.org/2000/svg">
-      <path d="M90 8 L166 91 L119 91 L119 218 L61 218 L61 91 L14 91 Z" fill="#f20b82" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+    <svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="arrowFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f20b82" stop-opacity="1"/>
+          <stop offset="42%" stop-color="#f20b82" stop-opacity=".82"/>
+          <stop offset="100%" stop-color="#f20b82" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M90 5 L145 82 L116 82 L174 360 L6 360 L64 82 L35 82 Z"
+            fill="url(#arrowFade)" stroke="rgba(255,255,255,.72)" stroke-width="4"
+            stroke-linejoin="round"/>
     </svg>
   </div>
   <div class="caption-card">
