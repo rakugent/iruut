@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Route Story Builder</title>
+<style>
+  :root{
+    --cream:#fbf8ef;
+    --cream-deep:#f1eadb;
+    --blue:#123b9b;
+    --blue-dark:#0b2c78;
+    --blue-soft:#e9efff;
+    --pink:#f20b82;
+    --ink:#102b69;
+    --muted:#687797;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--cream);color:var(--ink)}
+  button,input,textarea{font:inherit}
+  .editor-wrap{min-height:100svh;padding:28px 18px 36px;display:flex;align-items:center;justify-content:center}
+  .editor{width:min(100%,760px)}
+  .heading{margin:0 0 7px;font-size:clamp(24px,4vw,34px);font-weight:750;letter-spacing:-.7px;color:var(--blue)}
+  .subheading{margin:0 0 22px;color:var(--muted);font-size:14px}
+  .cards{display:grid;grid-template-columns:1fr;gap:12px}
+  .step-card{background:#fffdf8;border:1.5px solid #d8e1f6;border-radius:17px;padding:15px;box-shadow:0 5px 18px rgba(18,59,155,.045)}
+  .step-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .number{width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:var(--blue);color:white;font-size:13px;font-weight:700;flex:none}
+  .step-name{font-size:15px;font-weight:700;color:var(--blue)}
+  .fields{display:grid;grid-template-columns: minmax(0, .9fr) minmax(0, 1.5fr);gap:12px}
+  .upload{min-height:112px;border:1.5px dashed #9aaddb;border-radius:12px;background:var(--blue-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;padding:10px;cursor:pointer;overflow:hidden}
+  .upload:hover{border-color:var(--blue)}
+  .upload input{display:none}
+  .upload-icon{font-size:24px;color:var(--blue)}
+  .upload-label{font-size:12px;font-weight:700;color:var(--blue)}
+  .upload-hint{font-size:10px;color:var(--muted)}
+  .thumb{display:none;width:100%;height:92px;object-fit:cover;border-radius:8px}
+  .upload.has-image .thumb{display:block}
+  .upload.has-image .upload-icon,.upload.has-image .upload-label,.upload.has-image .upload-hint{display:none}
+  .text-fields{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .text-fields input,.text-fields textarea{width:100%;border:1px solid #d7dfef;border-radius:10px;background:#fff;padding:11px 12px;color:var(--ink);outline:none;font-size:13px}
+  .text-fields input:focus,.text-fields textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(18,59,155,.08)}
+  .text-fields textarea{resize:vertical;min-height:62px;max-height:110px;line-height:1.4}
+  .footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}
+  .required-note{font-size:12px;color:var(--muted)}
+  .next{border:0;border-radius:999px;padding:12px 26px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;min-width:120px;transition:opacity .15s,transform .15s}
+  .next:disabled{background:#aab7d4;cursor:not-allowed;opacity:.75}
+  .next:not(:disabled):active{transform:scale(.98)}
+  .story{display:none;position:fixed;inset:0;background:#111;overflow:hidden;touch-action:manipulation}
+  .story.active{display:block}
+  .story-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#292929}
+  .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.23),transparent 22%,transparent 55%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.24));pointer-events:none}
+  .progress{position:absolute;z-index:3;top:max(13px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:5px}
+  .progress-segment{height:4px;flex:1;border-radius:20px;background:rgba(255,255,255,.48);overflow:hidden}
+  .progress-segment.done,.progress-segment.current{background:#fff}
+  .story-count{position:absolute;z-index:3;top:30px;right:16px;color:white;font-size:12px;font-weight:700;text-shadow:0 1px 5px #0008}
+  .arrow-wrap{position:absolute;z-index:2;left:0;right:0;top:31%;height:35%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .arrow{width:clamp(105px,25vw,180px);height:auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.25))}
+  .caption-card{position:absolute;z-index:3;left:16px;right:16px;bottom:max(20px,env(safe-area-inset-bottom));background:rgba(255,253,248,.97);border-radius:22px;padding:19px 20px 21px;box-shadow:0 8px 30px rgba(0,0,0,.18);color:var(--blue)}
+  .caption-title{font-size:clamp(23px,5vw,31px);font-weight:800;line-height:1.1;margin:0 0 7px;letter-spacing:-.5px}
+  .caption-description{font-size:clamp(14px,3.5vw,17px);line-height:1.4;margin:0;color:#18366f;white-space:pre-wrap}
+  .tap-hint{position:absolute;z-index:3;bottom:calc(max(20px,env(safe-area-inset-bottom)) + 112px);right:24px;color:#fff;font-size:11px;text-shadow:0 1px 5px #0009;opacity:.9;pointer-events:none}
+  .tap-layer{position:absolute;inset:0;z-index:4;cursor:pointer}
+  @media(min-width:680px){
+    .cards{grid-template-columns:1fr}
+    .step-card{padding:17px 18px}
+    .fields{grid-template-columns:180px 1fr}
+    .upload{min-height:112px}
+    .editor-wrap{padding-top:35px}
+    .story{width:min(100%,560px);left:50%;transform:translateX(-50%);box-shadow:0 0 0 100vmax #111}
+  }
+  @media(max-width:420px){
+    .editor-wrap{padding:22px 12px}
+    .step-card{padding:12px}
+    .fields{grid-template-columns:112px minmax(0,1fr);gap:9px}
+    .upload{min-height:108px;padding:7px}
+    .text-fields input,.text-fields textarea{font-size:12px;padding:10px}
+  }
+</style>
+</head>
+<body>
+<main class="editor-wrap" id="editor">
+  <section class="editor">
+    <h1 class="heading">Create your route story</h1>
+    <p class="subheading">Add three photos, each with its own direction and instruction.</p>
+    <div class="cards" id="cards"></div>
+    <div class="footer">
+      <span class="required-note" id="status">Complete all 3 steps to continue.</span>
+      <button class="next" id="next" disabled>Next</button>
+    </div>
+  </section>
+</main>
+
+<section class="story" id="story" aria-label="Route story">
+  <img class="story-photo" id="storyPhoto" alt="Navigation step photo">
+  <div class="shade"></div>
+  <div class="progress" id="progress"></div>
+  <div class="story-count" id="storyCount">1 of 3</div>
+  <div class="arrow-wrap" aria-hidden="true">
+    <svg class="arrow" viewBox="0 0 180 230" xmlns="http://www.w3.org/2000/svg">
+      <path d="M90 8 L166 91 L119 91 L119 218 L61 218 L61 91 L14 91 Z" fill="#f20b82" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="caption-card">
+    <h2 class="caption-title" id="captionTitle"></h2>
+    <p class="caption-description" id="captionDescription"></p>
+  </div>
+  <div class="tap-hint">Tap to continue</div>
+  <div class="tap-layer" id="tapLayer" aria-label="Tap to show next direction"></div>
+</section>
+
+<script>
+(() => {
+  const stepData = Array.from({length:3}, () => ({file:null, url:null, title:'', description:''}));
+  const cards = document.getElementById('cards');
+  const next = document.getElementById('next');
+  const status = document.getElementById('status');
+  const editor = document.getElementById('editor');
+  const story = document.getElementById('story');
+  let current = 0;
+
+  cards.innerHTML = stepData.map((_, i) => `
+    <article class="step-card">
+      <div class="step-head">
+        <span class="number">${i+1}</span>
+        <span class="step-name">Photo ${i+1}</span>
+      </div>
+      <div class="fields">
+        <label class="upload" id="uploadBox${i}">
+          <input type="file" accept="image/*" id="file${i}">
+          <span class="upload-icon">＋</span>
+          <span class="upload-label">Upload photo</span>
+          <span class="upload-hint">Tap to choose</span>
+          <img class="thumb" id="thumb${i}" alt="">
+        </label>
+        <div class="text-fields">
+          <input id="title${i}" type="text" maxlength="70" placeholder="Title (e.g. Go straight)">
+          <textarea id="description${i}" maxlength="220" placeholder="Description (e.g. Walk past the bakery.)"></textarea>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  function validate(){
+    const complete = stepData.every(s => s.file && s.title.trim() && s.description.trim());
+    next.disabled = !complete;
+    status.textContent = complete ? 'All 3 steps are ready.' : 'Complete all 3 steps to continue.';
+  }
+
+  stepData.forEach((step, i) => {
+    document.getElementById(`file${i}`).addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      if(step.url) URL.revokeObjectURL(step.url);
+      step.file = file;
+      step.url = URL.createObjectURL(file);
+      document.getElementById(`thumb${i}`).src = step.url;
+      document.getElementById(`uploadBox${i}`).classList.add('has-image');
+      validate();
+    });
+    document.getElementById(`title${i}`).addEventListener('input', e => {
+      step.title = e.target.value;
+      validate();
+    });
+    document.getElementById(`description${i}`).addEventListener('input', e => {
+      step.description = e.target.value;
+      validate();
+    });
+  });
+
+  function renderStory(){
+    const step = stepData[current];
+    document.getElementById('storyPhoto').src = step.url;
+    document.getElementById('captionTitle').textContent = step.title;
+    document.getElementById('captionDescription').textContent = step.description;
+    document.getElementById('storyCount').textContent = `${current+1} of 3`;
+    document.getElementById('progress').innerHTML = stepData.map((_,i) =>
+      `<span class="progress-segment ${i <= current ? 'done' : ''}"></span>`
+    ).join('');
+  }
+
+  next.addEventListener('click', () => {
+    if(next.disabled) return;
+    current = 0;
+    renderStory();
+    editor.style.display = 'none';
+    story.classList.add('active');
+  });
+
+  document.getElementById('tapLayer').addEventListener('click', () => {
+    current = (current + 1) % 3;
+    renderStory();
+  });
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && story.classList.contains('active')){
+      story.classList.remove('active');
+      editor.style.display = '';
+    } else if((e.key === 'ArrowRight' || e.key === ' ') && story.classList.contains('active')){
+      e.preventDefault();
+      current = (current + 1) % 3;
+      renderStory();
+    }
+  });
+})();
+</script>
+</body>
+</html>
