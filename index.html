@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,6 +47,23 @@
   .next{border:0;border-radius:999px;padding:12px 26px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;min-width:120px;transition:opacity .15s,transform .15s}
   .next:disabled{background:#aab7d4;cursor:not-allowed;opacity:.75}
   .next:not(:disabled):active{transform:scale(.98)}
+  .direction-row{display:none;margin:0 0 10px}
+  .direction-row.visible{display:block}
+  .add-direction{border:0;border-radius:999px;padding:8px 18px;background:var(--blue);color:#fff;font-weight:700;font-size:12px;cursor:pointer;transition:opacity .15s,transform .15s}
+  .add-direction:active{transform:scale(.98)}
+  .add-direction.added{background:var(--blue-dark)}
+  .direction-modal{display:none;position:fixed;inset:0;z-index:10;background:#111;overflow:hidden}
+  .direction-modal.active{display:block}
+  .direction-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .direction-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),transparent 35%,rgba(0,0,0,.12) 65%,rgba(0,0,0,.38));pointer-events:none}
+  .direction-next{position:absolute;z-index:4;top:max(22px,env(safe-area-inset-top));right:16px;border:0;border-radius:999px;padding:10px 22px;background:var(--blue);color:#fff;font-weight:700;cursor:not-allowed;opacity:.55}
+  .direction-next:enabled{cursor:pointer;opacity:1}
+  .direction-options{position:absolute;z-index:4;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:16px;padding:0 18px}
+  .direction-option{width:76px;height:76px;border:2px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(255,255,255,.94);display:grid;place-items:center;cursor:pointer}
+  .direction-option.selected{border:3px solid var(--pink);background:#fff}
+  .direction-option svg{width:48px;height:48px;overflow:visible}
+  .direction-preview{position:absolute;z-index:2;left:0;right:0;top:38%;height:48%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}
+  .direction-preview svg{width:clamp(125px,32vw,185px);height:100%;overflow:visible;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}
   .story{display:none;position:fixed;inset:0;background:#111;overflow:hidden;touch-action:manipulation}
   .story.active{display:block}
   .story-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#292929}
@@ -91,26 +109,24 @@
   </section>
 </main>
 
+<section class="direction-modal" id="directionModal" aria-label="Choose a direction">
+  <img class="direction-photo" id="directionPhoto" alt="Photo direction preview">
+  <div class="direction-shade"></div>
+  <div class="direction-preview" id="directionPreview"></div>
+  <button class="direction-next" id="directionNext" disabled>Next</button>
+  <div class="direction-options">
+    <button class="direction-option" type="button" data-direction="left" aria-label="Turn left"></button>
+    <button class="direction-option" type="button" data-direction="straight" aria-label="Go straight"></button>
+    <button class="direction-option" type="button" data-direction="right" aria-label="Turn right"></button>
+  </div>
+</section>
+
 <section class="story" id="story" aria-label="Route story">
   <img class="story-photo" id="storyPhoto" alt="Navigation step photo">
   <div class="shade"></div>
   <div class="progress" id="progress"></div>
   <div class="story-count" id="storyCount">1 of 3</div>
-  <div class="arrow-wrap" aria-hidden="true">
-    <svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="arrowFade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#f20b82" stop-opacity=".78"/>
-          <stop offset="12%" stop-color="#f20b82" stop-opacity=".34"/>
-          <stop offset="48%" stop-color="#f20b82" stop-opacity=".12"/>
-          <stop offset="100%" stop-color="#f20b82" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d="M90 5 L111 38 L101 38 L168 200 L12 216 L79 38 L69 38 Z"
-            fill="url(#arrowFade)" stroke="rgba(255,255,255,.55)" stroke-width="3"
-            stroke-linejoin="round"/>
-    </svg>
-  </div>
+  <div class="arrow-wrap" id="storyArrowWrap" aria-hidden="true"></div>
   <div class="caption-card">
     <h2 class="caption-title" id="captionTitle"></h2>
     <p class="caption-description" id="captionDescription"></p>
@@ -127,6 +143,12 @@
   const status = document.getElementById('status');
   const editor = document.getElementById('editor');
   const story = document.getElementById('story');
+  const directionModal = document.getElementById('directionModal');
+  const directionPhoto = document.getElementById('directionPhoto');
+  const directionPreview = document.getElementById('directionPreview');
+  const directionNext = document.getElementById('directionNext');
+  let editingDirection = 0;
+  let selectedDirection = null;
   let current = 0;
 
   cards.innerHTML = stepData.map((_, i) => `
@@ -134,6 +156,9 @@
       <div class="step-head">
         <span class="number">${i+1}</span>
         <span class="step-name">Photo ${i+1}</span>
+      </div>
+      <div class="direction-row" id="directionRow${i}">
+        <button class="add-direction" type="button" id="addDirection${i}">Add direction</button>
       </div>
       <div class="fields">
         <label class="upload" id="uploadBox${i}">
@@ -157,6 +182,55 @@
     status.textContent = complete ? 'All 3 steps are ready.' : 'Complete all 3 steps to continue.';
   }
 
+  const arrowPaths = {
+    straight: 'M90 5 L111 38 L101 38 L168 200 L12 216 L79 38 L69 38 Z',
+    left: 'M90 5 L111 38 L101 38 L101 145 Q101 177 75 193 L56 205 L70 212 L22 224 L40 178 L49 194 L65 184 Q84 173 84 145 L84 38 L69 38 Z',
+    right: 'M90 5 L111 38 L101 38 L101 145 Q101 177 127 193 L146 205 L132 212 L180 224 L162 178 L153 194 L137 184 Q118 173 118 145 L118 38 L69 38 Z'
+  };
+
+  function arrowMarkup(direction){
+    return `<svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="arrowFade${direction}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f20b82" stop-opacity=".78"/>
+        <stop offset="12%" stop-color="#f20b82" stop-opacity=".34"/>
+        <stop offset="48%" stop-color="#f20b82" stop-opacity=".12"/>
+        <stop offset="100%" stop-color="#f20b82" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="${arrowPaths[direction]}" fill="url(#arrowFade${direction})" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function openDirectionPicker(index){
+    editingDirection = index;
+    selectedDirection = stepData[index].direction || null;
+    directionPhoto.src = stepData[index].url;
+    directionPreview.innerHTML = selectedDirection ? arrowMarkup(selectedDirection) : '';
+    directionNext.disabled = !selectedDirection;
+    document.querySelectorAll('.direction-option').forEach(option => {
+      option.classList.toggle('selected', option.dataset.direction === selectedDirection);
+      option.innerHTML = arrowMarkup(option.dataset.direction);
+    });
+    directionModal.classList.add('active');
+  }
+
+  document.querySelectorAll('.direction-option').forEach(option => {
+    option.addEventListener('click', () => {
+      selectedDirection = option.dataset.direction;
+      stepData[editingDirection].direction = selectedDirection;
+      directionPreview.innerHTML = arrowMarkup(selectedDirection);
+      directionNext.disabled = false;
+      document.querySelectorAll('.direction-option').forEach(item => item.classList.toggle('selected', item === option));
+    });
+  });
+
+  directionNext.addEventListener('click', () => {
+    if(!selectedDirection) return;
+    const button = document.getElementById(`addDirection${editingDirection}`);
+    button.textContent = 'Direction added';
+    button.classList.add('added');
+    directionModal.classList.remove('active');
+  });
+
   stepData.forEach((step, i) => {
     document.getElementById(`file${i}`).addEventListener('change', e => {
       const file = e.target.files && e.target.files[0];
@@ -166,8 +240,10 @@
       step.url = URL.createObjectURL(file);
       document.getElementById(`thumb${i}`).src = step.url;
       document.getElementById(`uploadBox${i}`).classList.add('has-image');
+      document.getElementById(`directionRow${i}`).classList.add('visible');
       validate();
     });
+    document.getElementById(`addDirection${i}`).addEventListener('click', () => openDirectionPicker(i));
     document.getElementById(`title${i}`).addEventListener('input', e => {
       step.title = e.target.value;
       validate();
@@ -184,6 +260,7 @@
     document.getElementById('captionTitle').textContent = step.title;
     document.getElementById('captionDescription').textContent = step.description;
     document.getElementById('storyCount').textContent = `${current+1} of 3`;
+    document.getElementById('storyArrowWrap').innerHTML = step.direction ? arrowMarkup(step.direction) : '';
     document.getElementById('progress').innerHTML = stepData.map((_,i) =>
       `<span class="progress-segment ${i <= current ? 'done' : ''}"></span>`
     ).join('');
