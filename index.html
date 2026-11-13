@@ -62,7 +62,7 @@
   .direction-option{width:76px;height:76px;border:2px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(255,255,255,.94);display:grid;place-items:center;cursor:pointer}
   .direction-option.selected{border:3px solid var(--pink);background:#fff}
   .direction-option svg{width:48px;height:48px;overflow:visible}
-  .direction-preview{position:absolute;z-index:2;left:0;right:0;top:38%;height:48%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}
+  .direction-preview{position:absolute;z-index:2;left:0;right:0;top:64%;height:55%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}
   .direction-preview svg{width:clamp(125px,32vw,185px);height:100%;overflow:visible;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}
   .story{display:none;position:fixed;inset:0;background:#111;overflow:hidden;touch-action:manipulation}
   .story.active{display:block}
@@ -184,13 +184,13 @@
 
   const arrowPaths = {
     straight: 'M90 5 L111 38 L101 38 L168 200 L12 216 L79 38 L69 38 Z',
-    left: 'M90 5 L111 38 L101 38 L101 145 Q101 177 75 193 L56 205 L70 212 L22 224 L40 178 L49 194 L65 184 Q84 173 84 145 L84 38 L69 38 Z',
-    right: 'M90 5 L111 38 L101 38 L101 145 Q101 177 127 193 L146 205 L132 212 L180 224 L162 178 L153 194 L137 184 Q118 173 118 145 L118 38 L69 38 Z'
+    left: 'M12 216 L168 200 L123 90 Q116 78 108 70 L108 88 L15 60 L108 32 L108 50 Q92 65 75 90 L12 216 Z',
+    right: 'M12 216 L168 200 L105 90 Q88 65 72 50 L72 32 L165 60 L72 88 L72 70 Q64 78 57 90 L12 216 Z'
   };
 
   function arrowMarkup(direction){
     return `<svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="arrowFade${direction}" x1="0" y1="0" x2="0" y2="1">
+      <defs><linearGradient id="arrowFade${direction}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="360">
         <stop offset="0%" stop-color="#f20b82" stop-opacity=".78"/>
         <stop offset="12%" stop-color="#f20b82" stop-opacity=".34"/>
         <stop offset="48%" stop-color="#f20b82" stop-opacity=".12"/>
