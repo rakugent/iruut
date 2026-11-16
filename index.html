@@ -183,10 +183,12 @@
   }
 
   const arrowPaths = {
-    straight: 'M24 330 L156 330 L101 105 L126 105 L90 30 L54 105 L79 105 Z',
-    left: 'M24 330 L156 330 L112 148 C108 130 98 116 82 106 L94 72 L12 88 L78 130 L84 111 C96 120 103 134 107 151 Z',
-    right: 'M24 330 L156 330 L73 151 C77 134 84 120 96 111 L102 130 L168 88 L86 72 L98 106 C82 116 72 130 68 148 Z'
-  };
+  straight: 'M90 5 L111 38 L101 38 L168 200 L12 216 L79 38 L69 38 Z',
+
+  left: 'M12 216 L168 200 L101 88 C96 70 86 56 70 46 L70 64 L5 38 L70 5 L70 24 C96 39 112 60 121 89 L? 0 Z',
+
+  right: 'M12 216 L168 200 L59 89 C68 60 84 39 110 24 L110 5 L175 38 L110 64 L110 46 C94 56 84 70 79 88 L12 216 Z'
+};
 
   function arrowMarkup(direction){
     return `<svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
