@@ -182,12 +182,12 @@
     status.textContent = complete ? 'All 3 steps are ready.' : 'Complete all 3 steps to continue.';
   }
 
-  const arrowPaths = {
+const arrowPaths = {
   straight: 'M90 5 L111 38 L101 38 L168 216 L12 216 L79 38 L69 38 Z',
 
-  left: 'M12 216 L168 216 L101 88 C96 70 86 56 70 46 L70 64 L5 38 L70 5 L70 24 C96 39 112 60 121 89 L? 0 Z',
+  left: 'M12 216 L168 216 L121 89 C112 65 98 48 78 36 L78 65 L5 38 L78 5 L78 24 C57 37 44 56 36 80 L12 216 Z',
 
-  right: 'M12 216 L168 216 L59 89 C68 60 84 39 110 24 L110 5 L175 38 L110 64 L110 46 C94 56 84 70 79 88 L12 216 Z'
+  right: 'M12 216 L168 216 L144 80 C136 56 123 37 102 24 L102 5 L175 38 L102 65 L102 36 C82 48 68 65 59 89 L12 216 Z'
 };
 
   function arrowMarkup(direction){
