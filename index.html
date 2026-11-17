@@ -190,17 +190,24 @@ const arrowPaths = {
   right: 'M168 216 L12 216 L59 89 C69 62 84 43 102 28 L102 22 L144 38 L102 54 L102 48 C84 60 81 88 92 105 L168 216 Z'
 };
 
+  
+  let arrowGradientCounter = 0;
+
   function arrowMarkup(direction){
-    return `<svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="arrowFade${direction}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="216">
-         <stop offset="0%" stop-color="#f20b82" stop-opacity=".95"/>
-         <stop offset="12%" stop-color="#f20b82" stop-opacity=".75"/>
-         <stop offset="48%" stop-color="#f20b82" stop-opacity=".35"/>
-         <stop offset="100%" stop-color="#f20b82" stop-opacity="0"/>
-      </linearGradient></defs>
-      <path d="${arrowPaths[direction]}" fill="url(#arrowFade${direction})" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linejoin="round"/>
+    const gradientId = `arrowFade${++arrowGradientCounter}`;
+     return `<svg class="arrow" viewBox="0 0 180 360" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="216">
+          <stop offset="0%" stop-color="#f20b82" stop-opacity=".95"/>
+          <stop offset="12%" stop-color="#f20b82" stop-opacity=".75"/>
+          <stop offset="48%" stop-color="#f20b82" stop-opacity=".35"/>
+          <stop offset="100%" stop-color="#f20b82" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${arrowPaths[direction]}" fill="url(#${gradientId})" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linejoin="round"/>
     </svg>`;
   }
+
 
   function openDirectionPicker(index){
     editingDirection = index;
