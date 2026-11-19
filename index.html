@@ -55,9 +55,21 @@
   .direction-modal{display:none;position:fixed;inset:0;z-index:10;background:#111;overflow:hidden}
   .direction-modal.active{display:block}
   .direction-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .direction-drawing{position:absolute;z-index:2;inset:0;width:100%;height:100%;pointer-events:none}
   .direction-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),transparent 35%,rgba(0,0,0,.12) 65%,rgba(0,0,0,.38));pointer-events:none}
   .direction-next{position:absolute;z-index:4;top:max(22px,env(safe-area-inset-top));right:16px;border:0;border-radius:999px;padding:10px 22px;background:var(--blue);color:#fff;font-weight:700;cursor:not-allowed;opacity:.55}
   .direction-next:enabled{cursor:pointer;opacity:1}
+  .draw-toggle{position:absolute;z-index:6;top:max(22px,env(safe-area-inset-top));left:16px;width:42px;height:42px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(255,255,255,.58);color:#fff;display:grid;place-items:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer}
+  .draw-toggle svg{width:21px;height:21px}
+  .draw-done{position:absolute;z-index:6;top:max(22px,env(safe-area-inset-top));left:16px;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.9);color:#222;font-size:11px;font-weight:700;cursor:pointer}
+  .draw-colors{display:none;position:absolute;z-index:6;left:17px;top:50%;transform:translateY(-50%);height:min(48vh,330px);width:34px;border-radius:20px;padding:5px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .draw-colors.visible{display:block}
+  .draw-colors input{appearance:none;-webkit-appearance:none;writing-mode:vertical-lr;direction:rtl;width:24px;height:100%;margin:0;border:0;border-radius:14px;background:linear-gradient(to top,#ffffff 0%,hsl(1,100%,50%) 0.28%,hsl(60,100%,50%) 16.62%,hsl(120,100%,50%) 33.24%,hsl(180,100%,50%) 49.86%,hsl(240,100%,50%) 66.48%,hsl(300,100%,50%) 83.1%,hsl(360,100%,50%) 100%);cursor:pointer;touch-action:pan-y;outline:none}
+  .draw-colors input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:12px;border:2px solid #fff;border-radius:8px;background:rgba(20,20,20,.65);box-shadow:0 1px 4px #0008}
+  .draw-colors input::-moz-range-thumb{width:20px;height:8px;border:2px solid #fff;border-radius:8px;background:rgba(20,20,20,.65);box-shadow:0 1px 4px #0008}
+  .draw-color-preview{display:none;position:absolute;z-index:7;left:58px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:2px solid #fff;border-radius:50%;background:#fff;box-shadow:0 1px 6px #0008;pointer-events:none}
+  .draw-color-preview.visible{display:block}
+  .draw-canvas{position:absolute;z-index:3;inset:0;width:100%;height:100%;touch-action:none}
   .direction-options{position:absolute;z-index:4;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:16px;padding:0 18px}
   .direction-option{width:76px;height:76px;border:2px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(255,255,255,.94);display:grid;place-items:center;cursor:pointer}
   .direction-option.selected{border:3px solid var(--pink);background:#fff}
@@ -67,6 +79,7 @@
   .story{display:none;position:fixed;inset:0;background:#111;overflow:hidden;touch-action:manipulation}
   .story.active{display:block}
   .story-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#292929}
+  .story-drawing{position:absolute;z-index:2;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
   .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.23),transparent 22%,transparent 55%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.24));pointer-events:none}
   .progress{position:absolute;z-index:3;top:max(13px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:5px}
   .progress-segment{height:4px;flex:1;border-radius:20px;background:rgba(255,255,255,.48);overflow:hidden}
@@ -111,8 +124,14 @@
 
 <section class="direction-modal" id="directionModal" aria-label="Choose a direction">
   <img class="direction-photo" id="directionPhoto" alt="Photo direction preview">
+  <img class="direction-drawing" id="directionDrawing" alt="">
+  <canvas class="draw-canvas" id="drawCanvas"></canvas>
   <div class="direction-shade"></div>
   <div class="direction-preview" id="directionPreview"></div>
+  <button class="draw-toggle" id="drawToggle" type="button" aria-label="Draw on photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 4 4 4L9 19l-5 1 1-5L16 4Z"/><path d="m14 6 4 4"/></svg></button>
+  <button class="draw-done" id="drawDone" type="button" hidden>Done</button>
+  <div class="draw-colors" id="drawColors"><input id="drawColor" type="range" min="0" max="360" step="1" value="0" aria-label="Drawing colour"></div>
+  <div class="draw-color-preview" id="drawColorPreview" aria-label="Selected drawing colour"></div>
   <button class="direction-next" id="directionNext" disabled>Next</button>
   <div class="direction-options">
     <button class="direction-option" type="button" data-direction="left" aria-label="Turn left"></button>
@@ -123,6 +142,7 @@
 
 <section class="story" id="story" aria-label="Route story">
   <img class="story-photo" id="storyPhoto" alt="Navigation step photo">
+  <img class="story-drawing" id="storyDrawing" alt="">
   <div class="shade"></div>
   <div class="progress" id="progress"></div>
   <div class="story-count" id="storyCount">1 of 3</div>
@@ -147,6 +167,16 @@
   const directionPhoto = document.getElementById('directionPhoto');
   const directionPreview = document.getElementById('directionPreview');
   const directionNext = document.getElementById('directionNext');
+  const directionDrawing = document.getElementById('directionDrawing');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const drawToggle = document.getElementById('drawToggle');
+  const drawDone = document.getElementById('drawDone');
+  const drawColors = document.getElementById('drawColors');
+  const drawColor = document.getElementById('drawColor');
+  let selectedDrawColor = '#ffffff';
+  let drawingMode = false;
+  let isDrawing = false;
+  let drawContext = drawCanvas.getContext('2d');
   let editingDirection = 0;
   let selectedDirection = null;
   let current = 0;
@@ -209,18 +239,89 @@ const arrowPaths = {
   }
 
 
+  function resizeDrawCanvas(){
+    const rect = directionModal.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const old = document.createElement('canvas');
+    old.width = drawCanvas.width;
+    old.height = drawCanvas.height;
+    if(old.width && old.height) old.getContext('2d').drawImage(drawCanvas,0,0);
+    drawCanvas.width = Math.round(rect.width * ratio);
+    drawCanvas.height = Math.round(rect.height * ratio);
+    drawContext = drawCanvas.getContext('2d');
+    drawContext.setTransform(ratio,0,0,ratio,0,0);
+    if(old.width && old.height) drawContext.drawImage(old,0,0,old.width/ratio,old.height/ratio);
+  }
+
+  function setDrawingMode(active){
+    drawingMode = active;
+    drawToggle.hidden = active;
+    drawDone.hidden = !active;
+    drawColors.classList.toggle('visible',active);
+    document.getElementById('drawColorPreview').classList.toggle('visible',active);
+    directionNext.style.display = active ? 'none' : '';
+    document.querySelector('.direction-options').style.display = active ? 'none' : '';
+    drawCanvas.style.pointerEvents = active ? 'auto' : 'none';
+  }
+
   function openDirectionPicker(index){
     editingDirection = index;
     selectedDirection = stepData[index].direction || null;
     directionPhoto.src = stepData[index].url;
+    directionDrawing.src = stepData[index].drawing || '';
+    directionDrawing.style.display = stepData[index].drawing ? 'block' : 'none';
+    drawCanvas.width = 0;
+    drawCanvas.height = 0;
+    setDrawingMode(false);
+    drawColor.value = '0';
+    selectedDrawColor = '#ffffff';
+    document.getElementById('drawColorPreview').style.background = selectedDrawColor;
     directionPreview.innerHTML = selectedDirection ? arrowMarkup(selectedDirection) : '';
-    directionNext.disabled = !selectedDirection;
+    directionNext.disabled = false;
     document.querySelectorAll('.direction-option').forEach(option => {
       option.classList.toggle('selected', option.dataset.direction === selectedDirection);
       option.innerHTML = arrowMarkup(option.dataset.direction);
     });
     directionModal.classList.add('active');
+    requestAnimationFrame(resizeDrawCanvas);
   }
+
+  drawToggle.addEventListener('click', () => setDrawingMode(true));
+  drawDone.addEventListener('click', () => {
+    stepData[editingDirection].drawing = drawCanvas.toDataURL('image/png');
+    directionDrawing.src = stepData[editingDirection].drawing;
+    directionDrawing.style.display = 'block';
+    setDrawingMode(false);
+  });
+  drawColor.addEventListener('input', () => {
+    const hue = Number(drawColor.value);
+    selectedDrawColor = hue === 0 ? '#ffffff' : `hsl(${hue}, 100%, 50%)`;
+    document.getElementById('drawColorPreview').style.background = selectedDrawColor;
+    drawContext.strokeStyle = selectedDrawColor;
+  });
+  drawCanvas.addEventListener('pointerdown', e => {
+    if(!drawingMode) return;
+    isDrawing = true;
+    drawCanvas.setPointerCapture(e.pointerId);
+    const rect = drawCanvas.getBoundingClientRect();
+    drawContext.beginPath();
+    drawContext.moveTo(e.clientX - rect.left,e.clientY - rect.top);
+    drawContext.strokeStyle = selectedDrawColor;
+    drawContext.lineWidth = 4;
+    drawContext.lineCap = 'round';
+    drawContext.lineJoin = 'round';
+  });
+  drawCanvas.addEventListener('pointermove', e => {
+    if(!drawingMode || !isDrawing) return;
+    const rect = drawCanvas.getBoundingClientRect();
+    drawContext.lineTo(e.clientX - rect.left,e.clientY - rect.top);
+    drawContext.stroke();
+  });
+  drawCanvas.addEventListener('pointerup', () => { isDrawing = false; });
+  drawCanvas.addEventListener('pointercancel', () => { isDrawing = false; });
+  window.addEventListener('resize', () => {
+    if(directionModal.classList.contains('active')) resizeDrawCanvas();
+  });
 
   document.querySelectorAll('.direction-option').forEach(option => {
     option.addEventListener('click', () => {
@@ -233,7 +334,6 @@ const arrowPaths = {
   });
 
   directionNext.addEventListener('click', () => {
-    if(!selectedDirection) return;
     const button = document.getElementById(`addDirection${editingDirection}`);
     button.textContent = 'Direction added';
     button.classList.add('added');
@@ -266,6 +366,9 @@ const arrowPaths = {
   function renderStory(){
     const step = stepData[current];
     document.getElementById('storyPhoto').src = step.url;
+    const storyDrawing = document.getElementById('storyDrawing');
+    storyDrawing.src = step.drawing || '';
+    storyDrawing.style.display = step.drawing ? 'block' : 'none';
     document.getElementById('captionTitle').textContent = step.title;
     document.getElementById('captionDescription').textContent = step.description;
     document.getElementById('storyCount').textContent = `${current+1} of 3`;
